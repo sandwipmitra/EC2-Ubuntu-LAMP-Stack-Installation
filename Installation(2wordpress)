@@ -1,0 +1,415 @@
+y
+####STEP 1#### [BECOME ROOT USER & INSTALL UPDATES]
+
+sudo -i
+
+passwd
+
+sudo apt update && sudo apt upgrade -y
+
+sudo timedatectl set-timezone Europe/London
+
+
+####STEP 2####  [INSTALL APACHE 2]
+
+sudo apt install apache2 -y
+
+
+
+####STEP 3####   [SETUP FIREWALL]
+
+sudo ufw app list
+
+
+*************************
+Output
+Available applications:
+   Apache
+   Apache Full
+   Apache Secure
+   OpenSSH
+*************************
+
+sudo ufw allow 'Apache Full'
+
+sudo ufw allow 'OpenSSH'
+
+sudo ufw enable
+
+sudo ufw status
+
+
+*******************************************************
+Output
+Status: active
+ To                         Action      From
+ --                         ------      ----
+ Apache Full                ALLOW       Anywhere                  
+ OpenSSH                    ALLOW       Anywhere                  
+ Apache Full (v6)           ALLOW       Anywhere (v6)             
+ OpenSSH (v6)               ALLOW       Anywhere (v6)
+********************************************************
+
+
+
+####STEP 4####   [CHECK APACHE INSTALLATION]
+
+
+
+sudo systemctl status apache2
+
+******************************************************************************************
+Output
+● apache2.service - The Apache HTTP Server
+    Loaded: loaded (/lib/systemd/system/apache2.service; enabled; vendor preset: enabled)
+   Drop-In: /lib/systemd/system/apache2.service.d
+            └─apache2-systemd.conf
+    Active: active (running) since Tue 2020-01-06 03:59:34 UTC; 5min ago
+  Main PID: 10617 (apache2)
+     Tasks: 55 (limit: 667)
+    CGroup: /system.slice/apache2.service
+            ├─10617 /usr/sbin/apache2 -k start
+            ├─10619 /usr/sbin/apache2 -k start
+            └─10620 /usr/sbin/apache2 -k start
+ Jan 06 03:59:34 apache systemd[1]: Starting The Apache HTTP Server…
+ Jan 06 03:59:34 apache systemd[1]: Started The Apache HTTP Server.
+*******************************************************************************************
+
+sudo systemctl enable apache2
+
+
+
+####STEP 5####  [INSTALL MYSQL]
+
+
+
+
+sudo apt install mysql-server -y
+
+
+sudo service mysql status
+
+****************************************************************************************
+mysql.service - MySQL Community Server
+     Loaded: loaded (/lib/systemd/system/mysql.service; enabled; vendor preset: enabled)
+     Active: active (running) since Tue 2020-05-05 07:13:18 UTC; 1min 4s ago
+   Main PID: 3333 (mysqld)
+     Status: "Server is operational"
+      Tasks: 38 (limit: 2010)
+     Memory: 322.9M
+     CGroup: /system.slice/mysql.service
+             └─3333 /usr/sbin/mysqld 
+****************************************************************************************
+
+
+sudo systemctl enable mysql
+
+
+
+####STEP 6####   [SECURE MYSQL]
+
+
+
+
+sudo mysql_secure_installation
+
+Enter
+
+0
+
+[enter password]
+[re-type password]
+
+y
+
+y
+
+y
+
+
+####STEP 7####   [INSTALL PHP]
+
+
+
+sudo apt install php  [-y]
+
+
+
+
+
+php -v
+
+
+
+
+sudo apt install wget unzip -y
+
+
+
+/--sudo apt install -y--/
+
+
+
+
+####STEP 8####   [CONFIGURE PHP]
+
+
+/---sudo nano /etc/php/8.1/apache2/php.ini---/
+
+
+PRESS "F6"
+
+****[CHANGE THE VALUE AS BELOW]****
+
+*************************************
+upload_max_filesize = 32M 
+post_max_size = 48M 
+memory_limit = 256M 
+max_execution_time = 600 
+max_input_vars = 3000 
+max_input_time = 1000
+*************************************
+
+****SAVE THE CHANGES****
+
+
+sudo systemctl restart apache2
+
+
+
+*******************************************************************************************************************************************************************************
+*******************************************************************************************************************************************************************************
+YOUR LAMP STACK IS READY!!!! :)
+
+
+
+
+
+####STEP 9####   [Download Wordpress]
+
+
+
+wget https://wordpress.org/latest.zip
+
+
+unzip latest.zip
+
+
+
+
+####STEP 10####     [Create Site Databases and Users]
+
+
+
+
+mysql -u root -p
+
+
+
+
+CREATE DATABASE examplesite1;
+
+
+CREATE DATABASE examplesite2;
+
+
+SHOW DATABASES;                            for delete only  ---->            ******DROP DATABASE database_name;*********
+
+
+
+CREATE USER 'examplesite1user'@'localhost' IDENTIFIED BY 'examplesite1pass';
+
+
+CREATE USER 'examplesite2user'@'localhost' IDENTIFIED BY 'examplesite2pass';
+
+
+SELECT User,Host,Plugin FROM mysql.user;                             for delete only  --->            *******DROP USER 'database_user'@'localhost';*********
+
+
+GRANT ALL PRIVILEGES ON examplesite1.* TO 'examplesite1user'@'localhost';
+
+
+GRANT ALL PRIVILEGES ON examplesite2.* TO 'examplesite2user'@'localhost';
+
+
+
+FLUSH PRIVILEGES;
+
+
+
+exit
+
+
+
+####STEP 11####    [Configuring Site Root Directories]
+
+
+cd /var/www
+
+
+sudo mkdir examplesite1
+
+
+sudo mkdir examplesite2
+
+
+
+cp ~/wordpress/wp-config-sample.php ~/wordpress/wp-config.php
+
+
+sudo rsync -avP ~/wordpress/ /var/www/examplesite1/
+
+
+sudo rsync -avP ~/wordpress/ /var/www/examplesite2/
+
+
+sudo chown www-data:www-data * -R
+
+
+sudo usermod -a -G www-data root
+
+
+####STEP 12###
+(A) [First Site Configuration]
+
+
+
+cd /var/www/examplesite1
+
+
+sudo nano wp-config.php
+
+
+// ** MySQL settings - You can get this info from your web host ** //
+/** The name of the database for WordPress */
+define('DB_NAME', 'examplesite1');
+
+/** MySQL database username */
+define('DB_USER', 'examplesite1user');
+
+/** MySQL database password */
+define('DB_PASSWORD', 'examplesite1pass');
+
+
+define( 'WP_MEMORY_LIMIT', '128M' );             [past this line just above the line that says ‘That’s all, stop editing! Publishing.’]
+
+
+
+Save and exit
+
+
+(B) [Second Site Configuration]
+
+
+
+cd /var/www/examplesite2
+
+
+sudo nano wp-config.php
+
+
+// ** MySQL settings - You can get this info from your web host ** //
+/** The name of the database for WordPress */
+define('DB_NAME', 'examplesite2');
+
+/** MySQL database username */
+define('DB_USER', 'examplesite2user');
+
+/** MySQL database password */
+define('DB_PASSWORD', 'examplesite2pass');
+
+
+define( 'WP_MEMORY_LIMIT', '128M' );             [past this line just above the line that says ‘That’s all, stop editing! Publishing.’]
+
+
+
+Save and exit
+
+
+
+####STEP 13####    [Apache Virtual Host Configuration]
+
+
+
+cd /etc/apache2/sites-available
+
+
+
+
+
+####STEP 14####    [First Site Virtual Host Configuration]
+
+
+sudo nano examplesite1.conf
+
+
+
+<VirtualHost *:80>
+	ServerAdmin youremail@mail.com
+	ServerName examplesite1.tk
+	ServerAlias www.examplesite1.tk
+	
+	DocumentRoot /var/www/examplesite1
+	<Directory />
+		Options FollowSymLinks
+		AllowOverride None
+	</Directory>
+	<Directory /var/www/examplesite1>
+		Options Indexes FollowSymLinks MultiViews
+		AllowOverride None
+		Order allow,deny
+		allow from all
+	</Directory>
+     ErrorLog ${APACHE_LOG_DIR}/error.log 
+     CustomLog ${APACHE_LOG_DIR}/access.log combined 
+ </VirtualHost>
+
+
+####STEP 15####    [Second Site Virtual Host Configuration]
+
+
+sudo nano examplesite2.conf
+
+
+
+<VirtualHost *:80>
+	ServerAdmin youremail@mail.com
+	ServerName examplesite2.tk
+	ServerAlias www.examplesite2.tk
+	
+	DocumentRoot /var/www/examplesite2
+	<Directory />
+		Options FollowSymLinks
+		AllowOverride None
+	</Directory>
+	<Directory /var/www/examplesite2>
+		Options Indexes FollowSymLinks MultiViews
+		AllowOverride None
+		Order allow,deny
+		allow from all
+	</Directory>
+     ErrorLog ${APACHE_LOG_DIR}/error.log 
+     CustomLog ${APACHE_LOG_DIR}/access.log combined 
+ </VirtualHost>
+
+
+
+####STEP 16####   [Final Configuration]
+
+
+
+sudo a2ensite examplesite1.conf
+
+sudo a2ensite examplesite2.conf
+
+
+
+sudo service apache2 reload
+
+
+
+
+
+
+
+*****************************************END***********************************
